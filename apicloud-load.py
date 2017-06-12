@@ -1,4 +1,4 @@
-#-*-coding:utf-8-*- 
+#-*-coding:utf-8-*-
 import sublime,sublime_plugin
 import os,platform,re,logging,subprocess,json,sys,traceback,shutil
 
@@ -13,17 +13,17 @@ html = '''<!DOCTYPE html>
     <link rel="stylesheet" type="text/css" href="api.css"/>
     <style>
         body{
-            
+
         }
     </style>
 </head>
 <body>
-    
+
 </body>
 <script type="text/javascript" src="api.js"></script>
 <script type="text/javascript">
     apiready = function(){
-        
+
     };
 </script>
 </html>'''
@@ -38,7 +38,7 @@ class ApicloudNewHtmlCommand(sublime_plugin.WindowCommand):
     def run(self, dirs):
         v = self.window.new_file()
         v.run_command('insert_apicloud_html')
- 
+
         if len(dirs) == 1:
             v.settings().set('default_dir', dirs[0])
 
@@ -94,13 +94,13 @@ def runShellCommand(cmd,cmdLogType):
                 stdout=str(stdoutbyte)
                 stderr=str(stderrbyte)
                 rtnCode=p.returncode
-            else:    
+            else:
                 p=subprocess.Popen(cmd,shell=False)
                 p.wait()
                 rtnCode=p.returncode
         else:
             print('runShellCommand: the platform is not support')
-        return (rtnCode,stdout,stderr)  
+        return (rtnCode,stdout,stderr)
 
 ############################################end global function############################
 
@@ -138,7 +138,7 @@ class ApicloudLoaderAndroidKeyCommand(sublime_plugin.TextCommand):
 
 class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
     """docstring for ApicloudLoaderAndroidCommand"""
-    __adbExe='' 
+    __adbExe=''
     __curDir=''
     __pkgName='com.apicloud.apploader'
     __loaderName='apicloud-loader'
@@ -147,8 +147,8 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
     __ignore=[".svn",".git"]
     def __init__(self,arg):
         self.__curDir=curDir
-    
-    def is_visible(self, dirs): 
+
+    def is_visible(self, dirs):
         return len(dirs) > 0
 
     def is_enabled(self, dirs):
@@ -179,7 +179,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
 
         sublime.status_message(u'真机同步完成')
         logging.info('*'*30+'android sync complete'+'*'*30)
-        
+
     def checkBasicInfo(self):
         logging.info('checkBasicInfo: current dir is '+self.__curDir)
         if not os.path.exists(os.path.join(self.__curDir,'tools')) or not os.path.isdir(os.path.join(self.__curDir,'tools')):
@@ -190,8 +190,8 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
             return -1
         import platform
         if 'darwin' in platform.system().lower() :
-            self.__adbExe='"'+os.path.join(self.__curDir,'tools','adb')+'"'    
-        elif 'windows' in platform.system().lower():                
+            self.__adbExe='"'+os.path.join(self.__curDir,'tools','adb')+'"'
+        elif 'windows' in platform.system().lower():
             self.__adbExe='"'+os.path.join(self.__curDir,'tools','adb.exe')+'"'
         else:
             logging.info('checkBasicInfo: the platform is not support')
@@ -237,7 +237,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         with open(os.path.join(srcPath,"config.xml"),encoding='utf-8') as f:
             fileContent=f.read()
             r=re.compile(r"widget.*id.*=.*(A[0-9]{13})\"")
-            searchResList=r.findall(fileContent)  
+            searchResList=r.findall(fileContent)
         if len(searchResList)>0:
             appId=searchResList[0]
         logging.info('getAppId: appId is '+appId)
@@ -247,7 +247,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         logging.info('begin getLoaderType')
         appIdPath=os.path.join(self.__curDir,'appLoader','custom-loader',appId)
         logging.info('getLoaderType: appIdPath is '+os.path.join(appIdPath,'load.conf'))
-        
+
         if os.path.exists(os.path.join(appIdPath,'load.conf')) and os.path.exists(os.path.join(appIdPath,'load.apk')):
             logging.info('getLoaderType: It is may a customerized loader.')
             with open(os.path.join(appIdPath,'load.conf')) as f:
@@ -266,21 +266,21 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
                 logging.info('getLoaderType: pkgName is '+self.__pkgName)
         else:
             self.__pkgName='com.apicloud.apploader'
-            self.__loaderName='apicloud-loader'    
-            logging.info('getLoaderType: path not exiest, will use default appLoader') 
+            self.__loaderName='apicloud-loader'
+            logging.info('getLoaderType: path not exiest, will use default appLoader')
         pass
 
     def pushDirOrFileCmd(self, serialNumber, srcPath, appId):
-        fulldirname=os.path.abspath(srcPath)  
+        fulldirname=os.path.abspath(srcPath)
         tmpPathName='tmp-apicloud-folder'
         tmpPath=os.path.join(os.path.dirname(srcPath),tmpPathName)
         # force delete .git which is read only
-        for (p,d,f) in os.walk(tmpPath):  
-            if p.find('.git')>0:  
+        for (p,d,f) in os.walk(tmpPath):
+            if p.find('.git')>0:
                 if 'windows' in platform.system().lower():
-                    os.popen('rd /s /q %s'%p) 
+                    os.popen('rd /s /q %s'%p)
                 elif 'darwin' in platform.system().lower():
-                    os.popen('rm -rf %s'%p) 
+                    os.popen('rm -rf %s'%p)
         if os.path.exists(tmpPath):
             self.CleanDir(tmpPath)
             os.rmdir(tmpPath)
@@ -293,7 +293,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         logging.info('pushDirOrFileCmd: pushCmd is '+pushCmd)
         (rtnCode,stdout,stderr)=runShellCommand(pushCmd,self.__cmdLogType)
         outputMsg=stdout+stderr
-        logging.info('pushDirOrFileCmd: outputMsg is '+outputMsg)    
+        logging.info('pushDirOrFileCmd: outputMsg is '+outputMsg)
         if 'error: device not found' in outputMsg:
             logging.info('pushDirOrFileCmd: failed to run pushDirOrFileCmd')
             return False
@@ -301,7 +301,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         os.rmdir(tmpPath)
         logging.info('pushDirOrFileCmd: pushDirOrFileCmd success!')
         return True
-        
+
     def CleanDir(self, Dir):
         if os.path.isdir( Dir ):
             paths = os.listdir( Dir )
@@ -329,7 +329,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         logging.info('pushStartInfo: pushCmd is '+pushCmd)
         (rtnCode,stdout,stderr)=runShellCommand(pushCmd,self.__cmdLogType)
         outputMsg=stdout+stderr
-        logging.info('pushStartInfo: outputMsg is '+outputMsg)    
+        logging.info('pushStartInfo: outputMsg is '+outputMsg)
         if 'error: device not found' in outputMsg:
             logging.info('pushStartInfo: failed to run pushStartInfo')
             return False
@@ -369,7 +369,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
 
         (rtnCode,stdout,stderr)=runShellCommand(installCmd,self.__cmdLogType)
         outputMsg=stdout+stderr
-        logging.info('installCmd: outputMsg is '+outputMsg)    
+        logging.info('installCmd: outputMsg is '+outputMsg)
         if len(outputMsg)>0 and 'Success' not in outputMsg:
             logging.info('installAppLoaderCmd: failed to run installAppLoader!')
             return False
@@ -437,7 +437,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         logging.info('load: appId is '+ str(appId))
         if -1==appId:
             sublime.error_message(u'请确保目录正确')
-            return 
+            return
         for serialNo in deviceSerialList:
             logging.info('load: begin to sync machine '+serialNo)
             if not self.pushDirOrFileCmd(serialNo,srcPath,appId):
@@ -450,11 +450,11 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
 
             currentVersion=self.getApploaderVersionCmd(serialNo)
             if -1!=currentVersion :
-                isNeedInstall=self.compareAppLoaderVer(currentVersion,self.__pendingVersion)                
+                isNeedInstall=self.compareAppLoaderVer(currentVersion,self.__pendingVersion)
             else:
                 logging.info('load: no appLoader found on the devices')
                 isNeedInstall=True
-            
+
             logging.info('loader: the isNeedInstall flag is '+str(isNeedInstall))
             if isNeedInstall:
                 if -1!=currentVersion:
@@ -512,7 +512,7 @@ class ApicloudLoaderIosKeyCommand(sublime_plugin.TextCommand):
 
 class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
     """docstring for ApicloudIOSLoaderCommand"""
-    __adbExe='' 
+    __adbExe=''
     __curDir=''
     __pkgName='com.apicloud.apploader'
     __loaderName='apicloud-loader'
@@ -521,8 +521,8 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
 
     def __init__(self,arg):
         self.__curDir=curDir
-    
-    def is_visible(self, dirs): 
+
+    def is_visible(self, dirs):
         return len(dirs) > 0
 
     def is_enabled(self, dirs):
@@ -567,7 +567,7 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
                         autoRun.exception( "remove %s error." %filePath )
                 elif os.path.isdir( filePath ):
                     shutil.rmtree(filePath,True)
-        return True        
+        return True
 
     def loadIos(self, srcPath):
         logging.info('loadIos: current dir is ')
@@ -576,7 +576,7 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
                 logging.info('loadIos: cannot find load.conf')
                 sublime.error_message(u'缺少JRE环境')
                 return
-        else: 
+        else:
             (rtnCode,stdout,stderr)=runShellCommand('java -version',self.__cmdLogType)
             outputMsg=stdout+stderr
             if 'version' not in outputMsg:
@@ -598,16 +598,16 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
         else:
             javaCmd='java'
 
-        fulldirname=os.path.abspath(srcPath)  
+        fulldirname=os.path.abspath(srcPath)
         tmpPathName='tmp-apicloud-folder'
         tmpPath=os.path.join(os.path.dirname(srcPath),tmpPathName)
         # force delete .git which is read only
-        for (p,d,f) in os.walk(tmpPath):  
-            if p.find('.git')>0:  
+        for (p,d,f) in os.walk(tmpPath):
+            if p.find('.git')>0:
                 if 'windows' in platform.system().lower():
-                    os.popen('rd /s /q %s'%p) 
+                    os.popen('rd /s /q %s'%p)
                 elif 'darwin' in platform.system().lower():
-                    os.popen('rm -rf %s'%p) 
+                    os.popen('rm -rf %s'%p)
         if os.path.exists(tmpPath):
             self.CleanDir(tmpPath)
             os.rmdir(tmpPath)
@@ -625,7 +625,7 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
         logging.info('loadIos: outputMsg is '+outputMsg)
         self.CleanDir(tmpPath)
         os.rmdir(tmpPath)
-        
+
         if 'No iOS device attached' in outputMsg:
             sublime.error_message(u'未发现连接的设备')
             logging.info('loadIos: no ios device found !')
@@ -649,17 +649,17 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
         with open(os.path.join(srcPath,"config.xml"),encoding='utf-8') as f:
             fileContent=f.read()
             r=re.compile(r"widget.*id.*=.*(A[0-9]{13})\"")
-            searchResList=r.findall(fileContent)  
+            searchResList=r.findall(fileContent)
         if len(searchResList)>0:
             appId=searchResList[0]
         logging.info('getAppId: appId is '+appId)
-        return appId       
+        return appId
 
     def getIosLoaderType(self,appId):
         logging.info('getIosLoaderType: begin getIosLoaderType')
         appIdPath=os.path.join(self.__curDir,'appLoader','custom-loader-ios',appId)
         logging.info('getIosLoaderType: appIdPath is '+os.path.join(appIdPath,'load.conf'))
-        
+
         if os.path.exists(os.path.join(appIdPath,'load.conf')) and os.path.exists(os.path.join(appIdPath,'load.ipa')):
             logging.info('getIosLoaderType: It is may a customerized loader.')
             with open(os.path.join(appIdPath,'load.conf')) as f:
@@ -678,9 +678,9 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
                 logging.info('getIosLoaderType: pkgName is '+self.__pkgName)
         else:
             self.__pkgName='com.apicloud.apploader'
-            self.__loaderName='apicloud-loader-ios'    
-            logging.info('getIosLoaderType: path not exiest, will use default appLoader') 
-        pass         
+            self.__loaderName='apicloud-loader-ios'
+            logging.info('getIosLoaderType: path not exiest, will use default appLoader')
+        pass
 
 import os,platform,uuid,urllib.parse,urllib.request,json
 def BeforeSystemRequests():
@@ -709,16 +709,16 @@ def BeforeSystemRequests():
             "uuid": hex(uuid.getnode())
         }
         try:
-            systemInfo = json.dumps(systemInfo) 
+            systemInfo = json.dumps(systemInfo)
             post(apiUrl,systemInfo)
         except Exception as e:
             print('exception is :',e)
         finally:
             pass
-    try:        
+    try:
         index()
     except Exception as e:
-        pass   
+        pass
 
 import functools
 class NewApicloudDefaultAppCommand(sublime_plugin.WindowCommand):
@@ -729,17 +729,17 @@ class NewApicloudDefaultAppCommand(sublime_plugin.WindowCommand):
         import shutil
         shutil.copytree(os.path.join(curDir,'appLoader','widget','default'),os.path.join(dir, name))
         desFile=os.path.join(dir, name)+"\\config.xml"
-        inputFile=open(desFile,encoding='utf-8')  
-        lines=inputFile.readlines()  
+        inputFile=open(desFile,encoding='utf-8')
+        lines=inputFile.readlines()
         inputFile.close()
-        outputFile =open(desFile,'w',encoding='utf-8'); 
+        outputFile =open(desFile,'w',encoding='utf-8');
         for line in lines:
-            if '<name>' in line: 
+            if '<name>' in line:
                 line='    <name>'+name+'</name>\n'
-                outputFile.write(line) 
-            else:    
-                outputFile.write(line) 
-        outputFile.close()      
+                outputFile.write(line)
+            else:
+                outputFile.write(line)
+        outputFile.close()
 
     def is_visible(self, dirs):
         return len(dirs) == 1
@@ -752,17 +752,17 @@ class NewApicloudBottomAppCommand(sublime_plugin.WindowCommand):
         import shutil
         shutil.copytree(os.path.join(curDir,'appLoader','widget','bottom'),os.path.join(dir, name))
         desFile=os.path.join(dir, name)+"\\config.xml"
-        inputFile=open(desFile,encoding='utf-8')  
-        lines=inputFile.readlines()  
+        inputFile=open(desFile,encoding='utf-8')
+        lines=inputFile.readlines()
         inputFile.close()
-        outputFile =open(desFile,'w',encoding='utf-8'); 
+        outputFile =open(desFile,'w',encoding='utf-8');
         for line in lines:
-            if '<name>' in line: 
+            if '<name>' in line:
                 line='  <name>'+name+'</name>\n'
-                outputFile.write(line) 
-            else:    
-                outputFile.write(line) 
-        outputFile.close()      
+                outputFile.write(line)
+            else:
+                outputFile.write(line)
+        outputFile.close()
 
     def is_visible(self, dirs):
         return len(dirs) == 1
@@ -775,20 +775,20 @@ class NewApicloudHomeAppCommand(sublime_plugin.WindowCommand):
         import shutil
         shutil.copytree(os.path.join(curDir,'appLoader','widget','home'),os.path.join(dir, name))
         desFile=os.path.join(dir, name)+"\\config.xml"
-        inputFile=open(desFile,encoding='utf-8')  
-        lines=inputFile.readlines()  
+        inputFile=open(desFile,encoding='utf-8')
+        lines=inputFile.readlines()
         inputFile.close()
-        outputFile =open(desFile,'w',encoding='utf-8'); 
+        outputFile =open(desFile,'w',encoding='utf-8');
         for line in lines:
-            if '<name>' in line: 
+            if '<name>' in line:
                 line='  <name>'+name+'</name>\n'
-                outputFile.write(line) 
-            else:    
-                outputFile.write(line) 
-        outputFile.close()      
+                outputFile.write(line)
+            else:
+                outputFile.write(line)
+        outputFile.close()
 
     def is_visible(self, dirs):
-        return len(dirs) == 1                
+        return len(dirs) == 1
 
 class NewApicloudSlideAppCommand(sublime_plugin.WindowCommand):
     def run(self, dirs):
@@ -798,20 +798,20 @@ class NewApicloudSlideAppCommand(sublime_plugin.WindowCommand):
         import shutil
         shutil.copytree(os.path.join(curDir,'appLoader','widget','slide'),os.path.join(dir, name))
         desFile=os.path.join(dir, name)+"\\config.xml"
-        inputFile=open(desFile,encoding='utf-8')  
-        lines=inputFile.readlines()  
+        inputFile=open(desFile,encoding='utf-8')
+        lines=inputFile.readlines()
         inputFile.close()
-        outputFile =open(desFile,'w',encoding='utf-8'); 
+        outputFile =open(desFile,'w',encoding='utf-8');
         for line in lines:
-            if '<name>' in line: 
+            if '<name>' in line:
                 line='  <name>'+name+'</name>\n'
-                outputFile.write(line) 
-            else:    
-                outputFile.write(line) 
-        outputFile.close()      
+                outputFile.write(line)
+            else:
+                outputFile.write(line)
+        outputFile.close()
 
     def is_visible(self, dirs):
-        return len(dirs) == 1 
+        return len(dirs) == 1
 
 import zipfile
 class CompressWidgetCommand(sublime_plugin.WindowCommand):
@@ -822,40 +822,40 @@ class CompressWidgetCommand(sublime_plugin.WindowCommand):
             filename=os.path.join(curDir,'apicloud.log'),
             filemode='a')
         dirname=dirs[0]
-        filelist=[]  
-        fulldirname=os.path.abspath(dirname)  
+        filelist=[]
+        fulldirname=os.path.abspath(dirname)
         zipfilename=os.path.basename(fulldirname)+'.zip'
-        fullzipfilename=os.path.join(os.path.dirname(fulldirname),zipfilename)  
+        fullzipfilename=os.path.join(os.path.dirname(fulldirname),zipfilename)
         logging.info('*'*30+'begin CompressWidgetCommand'+'*'*30)
         logging.info("CompressWidgetCommand: Begin to zip %s to %s ..." % (fulldirname, fullzipfilename)  )
-        if not os.path.exists(fulldirname):  
+        if not os.path.exists(fulldirname):
             logging.info( "CompressWidgetCommand: Folder %s is not exist" % fulldirname  )
             sublime.error_message(u"文件夹 %s 不存在!" % fulldirname)
-            return  
-        if os.path.exists(fullzipfilename):      
+            return
+        if os.path.exists(fullzipfilename):
             flag=sublime.ok_cancel_dialog(u"文件%s 已存在，确定覆盖该文件 ? [Y/N]" % fullzipfilename)
             logging.info("CompressWidgetCommand: %s has already exist" % fullzipfilename  )
             if not flag:
                 logging.info('CompressWidgetCommand: cancel zip the folder')
                 return
 
-        for root, dirlist, files in os.walk(dirname):  
-            for filename in files:  
-                filelist.append(os.path.join(root,filename))  
+        for root, dirlist, files in os.walk(dirname):
+            for filename in files:
+                filelist.append(os.path.join(root,filename))
 
-        destZip=zipfile.ZipFile(fullzipfilename, "w")  
-        for eachfile in filelist:  
-            destfile=eachfile[len(dirname):]  
+        destZip=zipfile.ZipFile(fullzipfilename, "w")
+        for eachfile in filelist:
+            destfile=eachfile[len(dirname):]
             sublime.status_message(u"正在压缩文件 file %s." % destfile )
             logging.info("CompressWidgetCommand: Zip file %s." % destfile  )
-            destZip.write(eachfile, 'widget'+destfile)  
-        destZip.close()  
+            destZip.write(eachfile, 'widget'+destfile)
+        destZip.close()
         sublime.status_message(u'压缩完成')
-        logging.info("CompressWidgetCommand: Zip folder succeed!")        
+        logging.info("CompressWidgetCommand: Zip folder succeed!")
         logging.info('*'*30+'CompressWidgetCommand complete'+'*'*30)
 
     def is_visible(self, dirs):
-        return len(dirs) == 1        
+        return len(dirs) == 1
 
     def is_enabled(self, dirs):
         if 0==len(dirs):
