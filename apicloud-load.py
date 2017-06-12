@@ -813,6 +813,29 @@ class NewApicloudSlideAppCommand(sublime_plugin.WindowCommand):
     def is_visible(self, dirs):
         return len(dirs) == 1
 
+class NewHtml5DefaultAppCommand(sublime_plugin.WindowCommand):
+    def run(self, dirs):
+        self.window.show_input_panel("新建 HTML5 项目名称:", "", functools.partial(self.on_done, dirs[0]), None, None)
+
+    def on_done(self, dir, name):
+        import shutil
+        shutil.copytree(os.path.join(curDir,'appLoader','html5','default'),os.path.join(dir, name))
+        # desFile=os.path.join(dir, name)+"\\config.xml"
+        # inputFile=open(desFile,encoding='utf-8')
+        # lines=inputFile.readlines()
+        # inputFile.close()
+        # outputFile =open(desFile,'w',encoding='utf-8');
+        # for line in lines:
+        #     if '<name>' in line:
+        #         line='  <name>'+name+'</name>\n'
+        #         outputFile.write(line)
+        #     else:
+        #         outputFile.write(line)
+        # outputFile.close()
+
+    def is_visible(self, dirs):
+        return len(dirs) == 1
+
 import zipfile
 class CompressWidgetCommand(sublime_plugin.WindowCommand):
     def run(self, dirs):
