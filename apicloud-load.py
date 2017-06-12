@@ -140,10 +140,11 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
     """docstring for ApicloudLoaderAndroidCommand"""
     __adbExe=''
     __curDir=''
-    __pkgName='com.apicloud.apploader'
+    # __pkgName='com.minxing.client'
+    __pkgName='com.minxing.client'
     __loaderName='apicloud-loader'
     __pendingVersion=''
-    __cmdLogType='' #logFile
+    __cmdLogType='logFile' #
     __ignore=[".svn",".git"]
     def __init__(self,arg):
         self.__curDir=curDir
@@ -265,7 +266,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
                 logging.info('getLoaderType: pendingVerion is '+self.__pendingVersion)
                 logging.info('getLoaderType: pkgName is '+self.__pkgName)
         else:
-            self.__pkgName='com.apicloud.apploader'
+            self.__pkgName='com.minxing.client'
             self.__loaderName='apicloud-loader'
             logging.info('getLoaderType: path not exiest, will use default appLoader')
         pass
@@ -288,7 +289,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         shutil.copytree(srcPath,tmpPath,ignore = shutil.ignore_patterns(*self.__ignore))
         logging.info('begin pushDirOrFileCmd from '+srcPath+' for appId '+appId)
         sublime.status_message(u'开始推送widget包')
-        desPath='/sdcard/UZMap/wgt/'+appId
+        desPath='/sdcard/minxing_dev/appstore/plugin/apps/debug/'+appId
         pushCmd=self.__adbExe+' -s '+serialNumber+' push "'+tmpPath+'" '+desPath
         logging.info('pushDirOrFileCmd: pushCmd is '+pushCmd)
         (rtnCode,stdout,stderr)=runShellCommand(pushCmd,self.__cmdLogType)
@@ -381,12 +382,13 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
         logging.info('installAppLoaderCmd: installAppLoader success!')
         return True
 
-    def startApploaderCmd(self, serialNumber):
+    def startApploaderCmd(self, serialNumber, appId):
         logging.info('begin startApploaderCmd for device '+serialNumber)
         sublime.status_message(u'正在启动loader')
-        appLoaderPkg=self.__pkgName+'/com.uzmap.pkg.EntranceActivity'
+        appLoaderPkg=self.__pkgName+'/com.minxing.kit.api.internal.App2AppBlankActivity'
+        # appLoaderPkg='com.minxing.client/com.minxing.kit.api.internal.App2AppBlankActivity'
         logging.info('startApploaderCmd: pkg name is '+appLoaderPkg)
-        startCmd=self.__adbExe +' -s '+serialNumber+' shell am start -W -n '+appLoaderPkg
+        startCmd=self.__adbExe +' -s '+serialNumber+' shell am start -W -n '+appLoaderPkg + ' --es "appId" '+appId
         logging.info('startApploaderCmd: cmd is '+startCmd)
         (rtnCode,stdout,stderr)=runShellCommand(startCmd,self.__cmdLogType)
         outputMsg=stdout+stderr
@@ -443,35 +445,33 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
             if not self.pushDirOrFileCmd(serialNo,srcPath,appId):
                 sublime.error_message(u'向手机拷贝文件失败，请检查连接设备')
                 return
-            if self.__pkgName=='com.apicloud.apploader':
+            if self.__pkgName=='com.minxing.client':
                 if not self.pushStartInfo(serialNo,appId):
                     sublime.error_message(u'向手机拷贝启动文件失败，请检查连接设备')
                     return
+            # currentVersion=self.getApploaderVersionCmd(serialNo)
+            # if -1!=currentVersion :
+            #     isNeedInstall=self.compareAppLoaderVer(currentVersion,self.__pendingVersion)
+            # else:
+            #     logging.info('load: no appLoader found on the devices')
+            #     isNeedInstall=True
 
-            currentVersion=self.getApploaderVersionCmd(serialNo)
-            if -1!=currentVersion :
-                isNeedInstall=self.compareAppLoaderVer(currentVersion,self.__pendingVersion)
-            else:
-                logging.info('load: no appLoader found on the devices')
-                isNeedInstall=True
-
-            logging.info('loader: the isNeedInstall flag is '+str(isNeedInstall))
-            if isNeedInstall:
-                if -1!=currentVersion:
-                    if not self.uninstallApploaderCmd(serialNo):
-                        logging.info('load: failed to excute uninstallApploaderCmd')
-                        sublime.error_message(u'卸载appLoader失败')
-                        continue
-                if not self.installAppLoaderCmd(serialNo):
-                    logging.info('load: failed to excute installAppLoaderCmd')
-                    sublime.error_message(u'安装appLoader失败')
-                    continue
-            else:
-                self.stopApploaderCmd(serialNo)
-                import time
-                time.sleep(1)
-
-            if not self.startApploaderCmd(serialNo):
+            # logging.info('loader: the isNeedInstall flag is '+str(isNeedInstall))
+            # if isNeedInstall:
+            #     if -1!=currentVersion:
+            #         if not self.uninstallApploaderCmd(serialNo):
+            #             logging.info('load: failed to excute uninstallApploaderCmd')
+            #             sublime.error_message(u'卸载appLoader失败')
+            #             continue
+            #     if not self.installAppLoaderCmd(serialNo):
+            #         logging.info('load: failed to excute installAppLoaderCmd')
+            #         sublime.error_message(u'安装appLoader失败')
+            #         continue
+            # else:
+            #     self.stopApploaderCmd(serialNo)
+            # 敏行不需要判断需不需要安装，默认以为安装了
+            self.stopApploaderCmd(serialNo)
+            if not self.startApploaderCmd(serialNo,appId):
                 sublime.error_message(u'真机同步启动appLoader失败')
                 continue
         pass
@@ -514,7 +514,7 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
     """docstring for ApicloudIOSLoaderCommand"""
     __adbExe=''
     __curDir=''
-    __pkgName='com.apicloud.apploader'
+    __pkgName='com.minxing.client'
     __loaderName='apicloud-loader'
     __cmdLogType='' #logFile
     __ignore=['.svn','.git']
@@ -677,7 +677,7 @@ class ApicloudLoaderIosCommand(sublime_plugin.WindowCommand):
                     self.__loaderName='custom-loader-ios'+os.path.sep+appId
                 logging.info('getIosLoaderType: pkgName is '+self.__pkgName)
         else:
-            self.__pkgName='com.apicloud.apploader'
+            self.__pkgName='com.minxing.client'
             self.__loaderName='apicloud-loader-ios'
             logging.info('getIosLoaderType: path not exiest, will use default appLoader')
         pass
