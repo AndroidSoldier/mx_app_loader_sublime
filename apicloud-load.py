@@ -63,8 +63,10 @@ class ApicloudNewHtmlCommand(sublime_plugin.WindowCommand):
 def isWidgetPath(path):
     isFound = False
     widgetPath = os.path.join(path, "widget")
-    appFileList = os.listdir(widgetPath)
-
+    try:
+        appFileList = os.listdir(widgetPath)
+    except:
+        return False
     if 'config.xml' in appFileList and 'index.html' in appFileList:
         with open(os.path.join(widgetPath, "config.xml"), encoding='utf-8') as f:
             fileContent = f.read()
@@ -74,6 +76,12 @@ def isWidgetPath(path):
                 isFound = True
     return isFound
 
+def isHtml5Path(path):
+    isFound = False
+    appFileList = os.listdir(path)
+    if 'plugin.properties' in appFileList and 'www' in appFileList:
+        isFound = True
+    return isFound
 
 def getWidgetPath(path):
     rootDir = os.path.abspath(path).split(os.path.sep)[0] + os.path.sep
@@ -87,39 +95,39 @@ def getWidgetPath(path):
     syncPath = ''
     for path in dirList:
 
-        if isWidgetPath(path):
+        if isWidgetPath(path) or isHtml5Path(path):
             syncPath = path
             break
     return syncPath
 
-    def runShellCommand(cmd, cmdLogType):
-        rtnCode = 0
-        stdout = ''
-        stderr = ''
+def runShellCommand(cmd, cmdLogType):
+    rtnCode = 0
+    stdout = ''
+    stderr = ''
 
-        if 'darwin' in platform.system().lower():
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, shell=True)
+    if 'darwin' in platform.system().lower():
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, shell=True)
+        stdoutbyte, stderrbyte = p.communicate()
+        stdout = str(stdoutbyte)
+        stderr = str(stderrbyte)
+        rtnCode = p.returncode
+
+    elif 'windows' in platform.system().lower():
+        if 'logFile' == cmdLogType:
+            p = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             stdoutbyte, stderrbyte = p.communicate()
             stdout = str(stdoutbyte)
             stderr = str(stderrbyte)
             rtnCode = p.returncode
-
-        elif 'windows' in platform.system().lower():
-            if 'logFile' == cmdLogType:
-                p = subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                stdoutbyte, stderrbyte = p.communicate()
-                stdout = str(stdoutbyte)
-                stderr = str(stderrbyte)
-                rtnCode = p.returncode
-            else:
-                p = subprocess.Popen(cmd, shell=False)
-                p.wait()
-                rtnCode = p.returncode
         else:
-            print('runShellCommand: the platform is not support')
-        return (rtnCode, stdout, stderr)
+            p = subprocess.Popen(cmd, shell=False)
+            p.wait()
+            rtnCode = p.returncode
+    else:
+        print('runShellCommand: the platform is not support')
+    return (rtnCode, stdout, stderr)
 
 ############################################end global function############################
 
@@ -149,6 +157,7 @@ class ApicloudLoaderAndroidKeyCommand(sublime_plugin.TextCommand):
                 errMsg = traceback.format_exc()
                 logging.info(errMsg)
                 # print(errMsg)
+                sublime.error_message(errMsg)
                 sublime.error_message(u'真机同步出现异常')
             sublime.status_message(u'真机同步完成')
             logging.info('*' * 30 + 'android sync complete' + '*' * 30)
@@ -177,10 +186,17 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
     def is_enabled(self, dirs):
         if 0 == len(dirs):
             return False
-        appFileList = os.listdir(os.path.join(dirs[0], "widget"))
-        if 'config.xml' in appFileList:
-            return True
-        return False
+        dir0 = dirs[0]
+        try:
+            files_in_widget = os.listdir(os.path.join(dir0, 'widget'))
+            if 'config.xml' in files_in_widget:
+                return True
+        except:
+            files_in_root = os.listdir(dir0)
+            if 'plugin.properties' in files_in_root:
+                return True
+            else:
+                return False
 
     def run(self, dirs):
         logging.basicConfig(level=logging.DEBUG,
@@ -199,6 +215,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
             logging.info('run: exception happened as below')
             errMsg = traceback.format_exc()
             logging.info(errMsg)
+            sublime.error_message(errMsg)
             sublime.error_message(u'真机同步出现异常')
 
         sublime.status_message(u'真机同步完成')
@@ -258,8 +275,9 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
             logging.info('getAppId:file no exist or not a folder!')
             return appId
         widgetPath = os.path.join(srcPath, "widget")
-        appFileList = os.listdir(widgetPath)
-        if 'config.xml' not in appFileList:
+        try:
+            appFileList = os.listdir(widgetPath)
+        except:
             # logging.info('getAppId: please make sure sync the correct folder!')
             # return -1
             basename = os.path.basename(srcPath)
@@ -267,6 +285,7 @@ class ApicloudLoaderAndroidCommand(sublime_plugin.WindowCommand):
                 'no config.xml found. using basename of the project directory as appId')
             logging.info('getAppId: appId is ' + basename)
             return basename
+
         srcPath = widgetPath
         with open(os.path.join(srcPath, "config.xml"), encoding='utf-8') as f:
             fileContent = f.read()
